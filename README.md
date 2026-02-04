@@ -8,6 +8,7 @@ Nuxt 4 project dengan ESLint dan Prettier yang sudah dikonfigurasi.
 - **Package Manager**: [Bun](https://bun.sh/)
 - **Linting**: [@nuxt/eslint](https://eslint.nuxt.com/)
 - **Formatting**: [Prettier](https://prettier.io/)
+- **Performance**: [@nuxt/hints](https://github.com/nuxt/hints)
 
 ## Setup
 
@@ -91,8 +92,24 @@ Konfigurasi Prettier ada di `.prettierrc`:
 | `trailingComma` | `es5` |
 | `printWidth` | `100` |
 
+### Nuxt Hints
+
+`@nuxt/hints` adalah module yang memberikan hints untuk berbagai aspek aplikasi seperti Performance, Security, dan lainnya langsung di Nuxt DevTools.
+
+**Fitur utama:**
+
+- 🚀 **Rich DevTools UI**: Tab khusus di Nuxt DevTools untuk visualisasi issues dan rekomendasi
+- ⚡️ **Web Vitals Analysis**: Metrics real-time untuk LCP, INP, dan CLS dengan tips optimasi
+- 💧 **Hydration Inspector**: Side-by-side diff untuk debugging hydration mismatch
+- 📦 **Third-Party Script Auditing**: Dashboard untuk monitor performa dan keamanan script eksternal
+- 💡 **Actionable Console Warnings**: Pesan console yang jelas untuk panduan best practices
+
+Untuk mengakses, buka Nuxt DevTools dan klik icon Nuxt Hints.
+
 ## Resources
 
 - [Nuxt Documentation](https://nuxt.com/docs)
 - [Nuxt ESLint Documentation](https://eslint.nuxt.com/)
+- [Nuxt Hints Documentation](https://nuxt.com/modules/hints)
 - [Prettier Documentation](https://prettier.io/docs/en/)
+
