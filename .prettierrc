@@ -2,7 +2,14 @@
   "semi": false,
   "singleQuote": true,
   "tabWidth": 2,
+  "useTabs": false,
   "trailingComma": "es5",
   "printWidth": 100,
-  "vueIndentScriptAndStyle": true
+  "bracketSpacing": true,
+  "bracketSameLine": false,
+  "arrowParens": "always",
+  "endOfLine": "lf",
+  "htmlWhitespaceSensitivity": "css",
+  "vueIndentScriptAndStyle": true,
+  "singleAttributePerLine": false
 }
