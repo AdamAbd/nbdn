@@ -6,6 +6,7 @@ Nuxt 4 project dengan ESLint dan Prettier yang sudah dikonfigurasi.
 
 - **Framework**: [Nuxt 4](https://nuxt.com/)
 - **Package Manager**: [Bun](https://bun.sh/)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
 - **Linting**: [@nuxt/eslint](https://eslint.nuxt.com/)
 - **Formatting**: [Prettier](https://prettier.io/)
 - **Performance**: [@nuxt/hints](https://github.com/nuxt/hints)
@@ -106,9 +107,44 @@ Konfigurasi Prettier ada di `.prettierrc`:
 
 Untuk mengakses, buka Nuxt DevTools dan klik icon Nuxt Hints.
 
+### Tailwind CSS
+
+Project ini menggunakan [Tailwind CSS v4](https://tailwindcss.com/) dengan `@tailwindcss/vite` plugin.
+
+**Setup:**
+
+1. Tailwind dikonfigurasi sebagai Vite plugin di `nuxt.config.ts`:
+
+```typescript
+import tailwindcss from '@tailwindcss/vite'
+
+export default defineNuxtConfig({
+  vite: {
+    plugins: [tailwindcss()],
+  },
+})
+```
+
+2. CSS import di `app/assets/css/main.css`:
+
+```css
+@import "tailwindcss";
+```
+
+**Penggunaan:**
+
+```vue
+<template>
+  <h1 class="text-3xl font-bold underline">
+    Hello world!
+  </h1>
+</template>
+```
+
 ## Resources
 
 - [Nuxt Documentation](https://nuxt.com/docs)
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
 - [Nuxt ESLint Documentation](https://eslint.nuxt.com/)
 - [Nuxt Hints Documentation](https://nuxt.com/modules/hints)
 - [Prettier Documentation](https://prettier.io/docs/en/)
