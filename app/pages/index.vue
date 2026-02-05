@@ -22,7 +22,6 @@
   const totalDone = computed(() => todos.value.filter((todo) => todo.completed).length)
 
   const nowIso = () => new Date().toISOString()
-  const formatDate = (iso: string) => new Date(iso).toLocaleString('id-ID')
 
   const resetForm = () => {
     form.title = ''
