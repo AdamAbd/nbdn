@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { TodoItem } from '~/lib/types'
+  import type { TodoItem } from '@/lib/types'
 
   definePageMeta({
     layout: 'default',
