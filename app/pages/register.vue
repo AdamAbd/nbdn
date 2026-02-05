@@ -50,11 +50,11 @@
                   id="register-form-email"
                   type="email"
                   :model-value="field.value"
-                  @update:model-value="field.onChange"
-                  @blur="field.onBlur"
                   placeholder="nama@email.com"
                   autocomplete="email"
                   :aria-invalid="!!errors.length"
+                  @update:model-value="field.onChange"
+                  @blur="field.onBlur"
                 />
                 <UiFieldError v-if="errors.length" :errors="errors" />
               </UiField>
@@ -67,11 +67,11 @@
                   id="register-form-password"
                   type="password"
                   :model-value="field.value"
-                  @update:model-value="field.onChange"
-                  @blur="field.onBlur"
                   placeholder="••••••••"
                   autocomplete="new-password"
                   :aria-invalid="!!errors.length"
+                  @update:model-value="field.onChange"
+                  @blur="field.onBlur"
                 />
                 <UiFieldError v-if="errors.length" :errors="errors" />
               </UiField>

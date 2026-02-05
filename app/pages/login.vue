@@ -42,7 +42,7 @@
         <UiCardDescription> Masukkan email dan password untuk melanjutkan </UiCardDescription>
       </UiCardHeader>
       <UiCardContent class="space-y-4">
-        <form id="login-form" @submit="onSubmit" class="space-y-4">
+        <form id="login-form" class="space-y-4" @submit="onSubmit">
           <UiFieldGroup>
             <VeeField v-slot="{ field, errors }" name="email">
               <UiField :data-invalid="!!errors.length">
@@ -51,11 +51,11 @@
                   id="login-form-email"
                   type="email"
                   :model-value="field.value"
-                  @update:model-value="field.onChange"
-                  @blur="field.onBlur"
                   placeholder="nama@email.com"
                   autocomplete="email"
                   :aria-invalid="!!errors.length"
+                  @update:model-value="field.onChange"
+                  @blur="field.onBlur"
                 />
                 <UiFieldError v-if="errors.length" :errors="errors" />
               </UiField>
@@ -68,11 +68,11 @@
                   id="login-form-password"
                   type="password"
                   :model-value="field.value"
-                  @update:model-value="field.onChange"
-                  @blur="field.onBlur"
                   placeholder="••••••••"
                   autocomplete="current-password"
                   :aria-invalid="!!errors.length"
+                  @update:model-value="field.onChange"
+                  @blur="field.onBlur"
                 />
                 <UiFieldError v-if="errors.length" :errors="errors" />
               </UiField>

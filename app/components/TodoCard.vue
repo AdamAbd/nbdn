@@ -17,7 +17,7 @@
 <template>
   <div class="bg-background space-y-3 rounded-lg border p-4 shadow-sm">
     <div v-if="todo.photoUrl" class="overflow-hidden rounded-md border">
-      <img :src="todo.photoUrl" alt="Foto todo" class="h-40 w-full object-cover" />
+      <img :src="todo.photoUrl" alt="Foto todo" class="h-40 w-full object-cover" >
     </div>
 
     <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -29,7 +29,7 @@
             :checked="todo.completed"
             class="accent-primary mt-1 size-4"
             @change="emit('toggle', todo.id)"
-          />
+          >
           <div>
             <label
               :for="`todo-${todo.id}`"

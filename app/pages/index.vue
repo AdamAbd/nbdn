@@ -1,9 +1,9 @@
 <script setup lang="ts">
+  import type { TodoItem } from '~/lib/types'
+
   definePageMeta({
     layout: 'default',
   })
-
-  import type { TodoItem } from '~/lib/types'
 
   const todos = ref<TodoItem[]>([])
   const editingId = ref<string | null>(null)
@@ -237,13 +237,13 @@
                   accept="image/*"
                   class="border-input file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 file:bg-muted w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none file:mr-3 file:rounded-md file:border-0 file:px-3 file:py-1.5 file:text-xs focus-visible:ring-[3px]"
                   @change="handleFileChange"
-                />
+                >
                 <div v-if="form.photoDataUrl" class="space-y-2">
                   <img
                     :src="form.photoDataUrl"
                     alt="Preview foto todo"
                     class="h-36 w-full rounded-md object-cover"
-                  />
+                  >
                   <UiButton
                     type="button"
                     variant="outline"

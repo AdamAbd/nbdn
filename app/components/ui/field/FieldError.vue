@@ -10,7 +10,7 @@ const props = defineProps<{
 
 const content = computed(() => {
   if (!props.errors || props.errors.length === 0)
-    return null
+    {return null}
 
   const uniqueErrors = [
     ...new Map(
