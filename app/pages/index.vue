@@ -9,6 +9,9 @@
   const editingId = ref<string | null>(null)
   const titleError = ref('')
   const jsonError = ref('')
+  const apiError = ref('')
+  const isLoading = ref(true)
+  const isSaving = ref(false)
   const fileInput = ref<HTMLInputElement | null>(null)
 
   const form = reactive({
@@ -21,8 +24,6 @@
   const isEditing = computed(() => editingId.value !== null)
   const totalDone = computed(() => todos.value.filter((todo) => todo.completed).length)
 
-  const nowIso = () => new Date().toISOString()
-
   const resetForm = () => {
     form.title = ''
     form.description = ''
@@ -34,6 +35,10 @@
     if (fileInput.value) {
       fileInput.value.value = ''
     }
+  }
+
+  const setApiError = (message = '') => {
+    apiError.value = message
   }
 
   const validateTitle = () => {
@@ -82,40 +87,67 @@
     }
   }
 
-  const handleSubmit = () => {
+  const fetchTodos = async () => {
+    isLoading.value = true
+    setApiError('')
+    try {
+      const data = await $fetch<TodoItem[]>('/api/todos', {
+        credentials: 'include',
+      })
+      todos.value = data
+    } catch {
+      setApiError('Gagal memuat todo. Pastikan sudah login.')
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  const handleSubmit = async () => {
     const titleOk = validateTitle()
     const jsonValue = parseJson()
     if (!titleOk || jsonError.value) {
       return
     }
 
-    if (editingId.value) {
-      const index = todos.value.findIndex((todo) => todo.id === editingId.value)
-      const current = todos.value[index]
-      if (current) {
-        todos.value[index] = {
-          ...current,
-          title: form.title.trim(),
-          description: form.description.trim(),
-          jsonValue,
-          photoUrl: form.photoDataUrl,
-          updatedAt: nowIso(),
-        }
-      }
-    } else {
-      todos.value.unshift({
-        id: `todo-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-        title: form.title.trim(),
-        description: form.description.trim(),
-        jsonValue,
-        photoUrl: form.photoDataUrl,
-        completed: false,
-        createdAt: nowIso(),
-        updatedAt: null,
-      })
-    }
+    isSaving.value = true
+    setApiError('')
 
-    resetForm()
+    try {
+      if (editingId.value) {
+        const updated = await $fetch<TodoItem>(`/api/todos/${editingId.value}`, {
+          method: 'PATCH',
+          credentials: 'include',
+          body: {
+            title: form.title.trim(),
+            description: form.description.trim(),
+            jsonValue,
+            photoUrl: form.photoDataUrl,
+          },
+        })
+        const index = todos.value.findIndex((todo) => todo.id === editingId.value)
+        if (index !== -1) {
+          todos.value[index] = updated
+        }
+      } else {
+        const created = await $fetch<TodoItem>('/api/todos', {
+          method: 'POST',
+          credentials: 'include',
+          body: {
+            title: form.title.trim(),
+            description: form.description.trim(),
+            jsonValue,
+            photoUrl: form.photoDataUrl,
+          },
+        })
+        todos.value.unshift(created)
+      }
+
+      resetForm()
+    } catch {
+      setApiError('Gagal menyimpan todo. Pastikan sudah login.')
+    } finally {
+      isSaving.value = false
+    }
   }
 
   const startEdit = (todo: TodoItem) => {
@@ -135,18 +167,41 @@
     resetForm()
   }
 
-  const removeTodo = (id: string) => {
-    todos.value = todos.value.filter((todo) => todo.id !== id)
-    if (editingId.value === id) {
-      resetForm()
+  const removeTodo = async (id: string) => {
+    setApiError('')
+    try {
+      await $fetch(`/api/todos/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      })
+      todos.value = todos.value.filter((todo) => todo.id !== id)
+      if (editingId.value === id) {
+        resetForm()
+      }
+    } catch {
+      setApiError('Gagal menghapus todo.')
     }
   }
 
-  const toggleCompleted = (id: string) => {
+  const toggleCompleted = async (id: string) => {
     const todo = todos.value.find((item) => item.id === id)
     if (!todo) return
-    todo.completed = !todo.completed
-    todo.updatedAt = nowIso()
+    setApiError('')
+    try {
+      const updated = await $fetch<TodoItem>(`/api/todos/${id}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        body: {
+          completed: !todo.completed,
+        },
+      })
+      const index = todos.value.findIndex((item) => item.id === id)
+      if (index !== -1) {
+        todos.value[index] = updated
+      }
+    } catch {
+      setApiError('Gagal mengubah status todo.')
+    }
   }
 
   watch(
@@ -166,6 +221,10 @@
       }
     }
   )
+
+  onMounted(() => {
+    fetchTodos()
+  })
 </script>
 
 <template>
@@ -182,6 +241,9 @@
           Total: {{ todos.length }} • Selesai: {{ totalDone }}
         </div>
       </div>
+      <p v-if="apiError" class="text-destructive text-sm">
+        {{ apiError }}
+      </p>
 
       <div class="grid gap-6 lg:grid-cols-[380px,1fr]">
         <UiCard class="border-0 shadow-md sm:border sm:shadow-sm">
@@ -256,8 +318,8 @@
               </div>
 
               <div class="flex flex-col gap-2">
-                <UiButton type="submit" class="w-full">
-                  {{ isEditing ? 'Simpan Perubahan' : 'Tambah Todo' }}
+                <UiButton type="submit" class="w-full" :disabled="isSaving">
+                  {{ isSaving ? 'Menyimpan...' : isEditing ? 'Simpan Perubahan' : 'Tambah Todo' }}
                 </UiButton>
                 <UiButton
                   v-if="isEditing"
@@ -278,7 +340,10 @@
           <span> Lihat, update status, edit, atau hapus todo di sini. </span>
         </div>
         <div>
-          <div v-if="!todos.length" class="text-muted-foreground text-sm">
+          <div v-if="isLoading" class="text-muted-foreground text-sm">
+            Memuat todo...
+          </div>
+          <div v-else-if="!todos.length" class="text-muted-foreground text-sm">
             Belum ada todo. Tambahkan todo baru di panel kiri.
           </div>
           <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">

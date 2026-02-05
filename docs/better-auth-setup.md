@@ -36,10 +36,15 @@ Sudah terpasang:
 - `app/lib/auth.ts` → konfigurasi Better Auth
 - `server/api/auth/[...all].ts` → handler API Better Auth
 - `server/db/index.ts` → koneksi Neon + Drizzle
-- `auth-schema.ts` → schema Drizzle hasil generate Better Auth
+- `auth-schema.ts` → schema Drizzle Better Auth + tabel custom (todo)
 - `drizzle.config.ts` → config Drizzle Kit
 - `app/lib/auth-client.ts` → client helper Better Auth untuk Nuxt
 - `nuxt.config.ts` → runtime config untuk env (Nuxt)
+- `server/api/todos/index.ts` → endpoint list + create todo
+- `server/api/todos/[id].ts` → endpoint update + delete todo
+- `server/utils/auth.ts` → helper ambil session Better Auth dari Nitro
+- `server/utils/todo.ts` → serializer todo ke format UI
+- `app/pages/index.vue` → integrasi CRUD todo ke backend
 
 ## Konfigurasi Drizzle Kit
 
@@ -157,6 +162,33 @@ Jalankan migration ke database:
 ```bash
 bun run db:migrate
 ```
+
+## Fitur Todo (Backend + UI)
+
+### Schema
+
+- Tabel `todo` disimpan di `auth-schema.ts`.
+- Field `user_id` (FK ke `user`) untuk isolasi data per user.
+- Field `json_value` (jsonb) untuk menyimpan JSON opsional.
+- Field `photo_url` (text) untuk menyimpan data URL foto.
+
+### Migration
+
+- File migration terbaru untuk todo: `drizzle/0001_wet_shotgun.sql`.
+
+### API Nitro
+
+- `GET /api/todos` → list todo milik user.
+- `POST /api/todos` → create todo baru.
+- `PATCH /api/todos/:id` → update todo (judul, deskripsi, json, foto, status).
+- `DELETE /api/todos/:id` → hapus todo.
+
+Semua endpoint di atas membutuhkan session Better Auth (cookie). Jika belum login, akan 401.
+
+### Integrasi UI
+
+Halaman `app/pages/index.vue` sudah memakai `$fetch` dengan `credentials: 'include'`
+untuk CRUD ke `/api/todos`, plus menampilkan status loading dan error.
 
 ## Contoh Pemakaian (Login)
 
