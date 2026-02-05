@@ -9,6 +9,9 @@ Nuxt 4 project dengan ESLint dan Prettier yang sudah dikonfigurasi.
 - **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
 - **UI Components**: [shadcn-vue](https://www.shadcn-vue.com/)
 - **Utilities**: [VueUse](https://vueuse.org/) via [@vueuse/nuxt](https://nuxt.com/modules/vueuse)
+- **Auth**: [Better Auth](https://www.better-auth.com/) + Drizzle adapter
+- **Database ORM**: [Drizzle ORM](https://orm.drizzle.team/)
+- **Database**: [Neon Postgres](https://neon.tech/) via `@neondatabase/serverless`
 - **Linting**: [@nuxt/eslint](https://eslint.nuxt.com/)
 - **Formatting**: [Prettier](https://prettier.io/)
 - **Performance**: [@nuxt/hints](https://github.com/nuxt/hints)
@@ -20,6 +23,38 @@ Install dependencies:
 
 ```bash
 bun install
+```
+
+## Environment Variables
+
+Buat file `.env` dan isi minimal:
+
+```bash
+DATABASE_URL=postgresql://...
+BETTER_AUTH_SECRET=your-secret
+BETTER_AUTH_URL=http://localhost:3000
+```
+
+> `BETTER_AUTH_URL` harus sesuai base URL aplikasi saat development maupun production.
+
+## Database (Drizzle + Neon)
+
+Generate migration dari schema Better Auth:
+
+```bash
+bun run db:generate
+```
+
+Jalankan migration ke database:
+
+```bash
+bun run db:migrate
+```
+
+Jika perlu regenerate schema Better Auth:
+
+```bash
+bunx @better-auth/cli@latest generate --yes
 ```
 
 ## Development
@@ -243,6 +278,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 Komponen shadcn-vue akan ditambahkan ke folder `app/components/ui/`.
 
+### Better Auth + Drizzle
+
+**Server**
+
+- Handler: `server/api/auth/[...all].ts`
+- Config: `auth.ts`
+- DB client: `server/db/index.ts`
+
+**Client**
+
+- Auth client: `app/lib/auth-client.ts`
+
+**Schema**
+
+- Drizzle schema hasil generate: `auth-schema.ts`
+- Drizzle config: `drizzle.config.ts`
+
 ## Resources
 
 - [Nuxt Documentation](https://nuxt.com/docs)
@@ -252,3 +304,6 @@ Komponen shadcn-vue akan ditambahkan ke folder `app/components/ui/`.
 - [Prettier Documentation](https://prettier.io/docs/en/)
 - [VueUse Documentation](https://vueuse.org/)
 - [shadcn-vue Documentation](https://www.shadcn-vue.com/)
+- [Better Auth Documentation](https://www.better-auth.com/docs)
+- [Drizzle ORM Documentation](https://orm.drizzle.team/docs/get-started)
+- [Neon Documentation](https://neon.tech/docs)
