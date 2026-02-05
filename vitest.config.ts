@@ -2,6 +2,25 @@ import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 import { defineVitestProject } from '@nuxt/test-utils/config'
 
+const nuxtProject = await defineVitestProject({
+  test: {
+    name: 'nuxt',
+    include: ['test/nuxt/*.{test,spec}.ts'],
+    environmentOptions: {
+      nuxt: {
+        rootDir: fileURLToPath(new URL('.', import.meta.url)),
+        domEnvironment: 'happy-dom',
+      },
+    },
+  },
+})
+
+if (!nuxtProject.test) {
+  throw new Error('Nuxt Vitest project missing test configuration.')
+}
+
+nuxtProject.test.environment = './test/nuxt-vitest-environment.ts'
+
 export default defineConfig({
   test: {
     projects: [
@@ -12,19 +31,7 @@ export default defineConfig({
           environment: 'node',
         },
       },
-      await defineVitestProject({
-        test: {
-          name: 'nuxt',
-          include: ['test/nuxt/*.{test,spec}.ts'],
-          environment: 'nuxt',
-          environmentOptions: {
-            nuxt: {
-              rootDir: fileURLToPath(new URL('.', import.meta.url)),
-              domEnvironment: 'happy-dom',
-            },
-          },
-        },
-      }),
+      nuxtProject,
     ],
     coverage: {
       enabled: true,
