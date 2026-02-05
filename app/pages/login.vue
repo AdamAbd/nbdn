@@ -3,12 +3,15 @@
   import { toTypedSchema } from '@vee-validate/zod'
   import { z } from 'zod'
   import { Loader2 } from 'lucide-vue-next'
+  import { authClient } from '@/lib/auth-client'
 
   definePageMeta({
     layout: 'default',
   })
 
   const isLoading = ref(false)
+  const formError = ref<string | null>(null)
+  const router = useRouter()
 
   const formSchema = toTypedSchema(
     z.object({
@@ -27,10 +30,24 @@
 
   const onSubmit = handleSubmit(async (values) => {
     isLoading.value = true
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-    console.log('Form submitted!', values)
-    isLoading.value = false
+    formError.value = null
+    try {
+      const { error } = await authClient.signIn.email({
+        email: values.email,
+        password: values.password,
+      })
+
+      if (error) {
+        formError.value = error.message ?? 'Email atau password salah'
+        return
+      }
+
+      await router.push('/')
+    } catch (error) {
+      formError.value = error instanceof Error ? error.message : 'Gagal masuk. Coba lagi.'
+    } finally {
+      isLoading.value = false
+    }
   })
 </script>
 
@@ -78,6 +95,10 @@
               </UiField>
             </VeeField>
           </UiFieldGroup>
+
+          <p v-if="formError" class="text-sm text-red-600">
+            {{ formError }}
+          </p>
 
           <UiButton type="submit" form="login-form" class="w-full" :disabled="isLoading">
             <Loader2 v-if="isLoading" class="animate-spin" />

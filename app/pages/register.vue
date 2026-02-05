@@ -3,14 +3,18 @@
   import { toTypedSchema } from '@vee-validate/zod'
   import { z } from 'zod'
   import { Loader2 } from 'lucide-vue-next'
+  import { authClient } from '@/lib/auth-client'
   definePageMeta({
     layout: 'default',
   })
 
   const isLoading = ref(false)
+  const formError = ref<string | null>(null)
+  const router = useRouter()
 
   const formSchema = toTypedSchema(
     z.object({
+      name: z.string().min(2, { message: 'Nama minimal 2 karakter' }),
       email: z.string().email({ message: 'Email tidak valid' }),
       password: z.string().min(8, { message: 'Password minimal 8 karakter' }),
     })
@@ -19,6 +23,7 @@
   const { handleSubmit } = useForm({
     validationSchema: formSchema,
     initialValues: {
+      name: '',
       email: '',
       password: '',
     },
@@ -26,10 +31,25 @@
 
   const onSubmit = handleSubmit(async (values) => {
     isLoading.value = true
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-    console.log('Register submitted!', values)
-    isLoading.value = false
+    formError.value = null
+    try {
+      const { error } = await authClient.signUp.email({
+        name: values.name,
+        email: values.email,
+        password: values.password,
+      })
+
+      if (error) {
+        formError.value = error.message ?? 'Gagal membuat akun'
+        return
+      }
+
+      await router.push('/login')
+    } catch (error) {
+      formError.value = error instanceof Error ? error.message : 'Gagal mendaftar. Coba lagi.'
+    } finally {
+      isLoading.value = false
+    }
   })
 </script>
 
@@ -43,6 +63,23 @@
       <UiCardContent class="space-y-4">
         <form id="register-form" class="space-y-4" @submit="onSubmit">
           <UiFieldGroup>
+            <VeeField v-slot="{ field, errors }" name="name">
+              <UiField :data-invalid="!!errors.length">
+                <UiFieldLabel for="register-form-name">Nama</UiFieldLabel>
+                <UiInput
+                  id="register-form-name"
+                  type="text"
+                  :model-value="field.value"
+                  placeholder="Nama lengkap"
+                  autocomplete="name"
+                  :aria-invalid="!!errors.length"
+                  @update:model-value="field.onChange"
+                  @blur="field.onBlur"
+                />
+                <UiFieldError v-if="errors.length" :errors="errors" />
+              </UiField>
+            </VeeField>
+
             <VeeField v-slot="{ field, errors }" name="email">
               <UiField :data-invalid="!!errors.length">
                 <UiFieldLabel for="register-form-email">Email</UiFieldLabel>
@@ -77,6 +114,10 @@
               </UiField>
             </VeeField>
           </UiFieldGroup>
+
+          <p v-if="formError" class="text-sm text-red-600">
+            {{ formError }}
+          </p>
 
           <UiButton type="submit" form="register-form" class="w-full" :disabled="isLoading">
             <Loader2 v-if="isLoading" class="animate-spin" />
