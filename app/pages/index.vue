@@ -282,7 +282,7 @@
             Belum ada todo. Tambahkan todo baru di panel kiri.
           </div>
           <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <TodoCard
+            <AppTodoCard
               v-for="todo in todos"
               :key="todo.id"
               :todo="todo"
