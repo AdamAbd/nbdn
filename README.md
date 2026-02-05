@@ -12,6 +12,7 @@ Nuxt 4 project dengan ESLint dan Prettier yang sudah dikonfigurasi.
 - **Linting**: [@nuxt/eslint](https://eslint.nuxt.com/)
 - **Formatting**: [Prettier](https://prettier.io/)
 - **Performance**: [@nuxt/hints](https://github.com/nuxt/hints)
+- **Testing**: [@nuxt/test-utils/module](https://nuxt.com/modules/test-utils) untuk integrasi test dengan Nuxt
 
 ## Setup
 
@@ -57,6 +58,22 @@ Check formatting without making changes:
 
 ```bash
 bun run format:check
+```
+
+## Testing
+
+Project ini menggunakan tiga jenis testing:
+
+- **Unit Test**: `vitest` (project `unit`)
+- **Nuxt Test**: `vitest` (project `nuxt`) dengan `@nuxt/test-utils/module` dan `happy-dom` sebagai DOM environment
+- **E2E Test**: `@playwright/test`
+
+Jalankan per tipe:
+
+```bash
+bun run test:unit
+bun run test:nuxt
+bun run test:e2e
 ```
 
 ## Production
@@ -108,6 +125,10 @@ Konfigurasi Prettier ada di `.prettierrc`:
 - 💡 **Actionable Console Warnings**: Pesan console yang jelas untuk panduan best practices
 
 Untuk mengakses, buka Nuxt DevTools dan klik icon Nuxt Hints.
+
+### Nuxt Test Utils
+
+`@nuxt/test-utils/module` menyediakan integrasi testing untuk Nuxt sehingga environment test lebih dekat dengan runtime Nuxt asli. Module ini sudah ditambahkan di `nuxt.config.ts`.
 
 ### Tailwind CSS
 
