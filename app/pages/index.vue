@@ -2,7 +2,8 @@
   import { useForm, Field as VeeField } from 'vee-validate'
   import { toTypedSchema } from '@vee-validate/zod'
   import { z } from 'zod'
-  import type { TodoItem } from '@/lib/types'
+
+  import { createTodoSchema, type TodoItem } from '~~/shared/schemas/todo'
 
   definePageMeta({
     layout: 'default',
@@ -17,14 +18,15 @@
 
   const formSchema = toTypedSchema(
     z.object({
-      title: z.string().min(1, { message: 'Judul wajib diisi' }),
-      description: z.string().optional(),
+      title: createTodoSchema.shape.title,
+      description: createTodoSchema.shape.description,
       jsonText: z
         .string()
         .optional()
+        .transform((val) => val || '')
         .refine(
           (val) => {
-            if (!val) return true
+            if (!val.trim()) return true
             try {
               JSON.parse(val)
               return true
@@ -236,12 +238,12 @@
           </UiCardHeader>
           <UiCardContent>
             <form id="todo-form" class="space-y-4" @submit="onSubmit">
-              <VeeField v-slot="{ field, errors }" name="title">
+              <VeeField v-slot="{ componentField, errors }" name="title">
                 <UiField :data-invalid="!!errors.length">
                   <UiFieldLabel for="todo-title">Judul</UiFieldLabel>
                   <UiInput
                     id="todo-title"
-                    v-model="field.value"
+                    v-bind="componentField"
                     type="text"
                     placeholder="Contoh: Belanja mingguan"
                     :aria-invalid="!!errors.length"
@@ -255,7 +257,7 @@
                   <UiFieldLabel for="todo-description">Deskripsi</UiFieldLabel>
                   <textarea
                     id="todo-description"
-                    v-model="field.value"
+                    v-bind="field"
                     rows="3"
                     placeholder="Catatan tambahan"
                     class="border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
@@ -270,7 +272,7 @@
                   <UiFieldLabel for="todo-json">Nilai JSON (opsional)</UiFieldLabel>
                   <textarea
                     id="todo-json"
-                    v-model="field.value"
+                    v-bind="field"
                     rows="4"
                     placeholder='{"prioritas":"tinggi","label":["rumah","urgent"]}'
                     class="border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"

@@ -2,8 +2,7 @@ import { randomUUID } from 'crypto'
 import { createError } from 'h3'
 import { TodoRepository } from '#server/repositories/todo.repository'
 import { serializeTodo } from '#server/utils/todo'
-import type { InferInsertModel } from 'drizzle-orm'
-import type { todo } from '#server/db/schema'
+import { createTodoSchema, updateTodoSchema } from '~~/shared/schemas/todo'
 
 export const TodoService = {
   async getTodos(userId: string) {
@@ -11,30 +10,25 @@ export const TodoService = {
     return rows.map(serializeTodo)
   },
 
-  async createTodo(
-    userId: string,
-    data: { title: string; description?: string; jsonValue?: any; photoUrl?: string }
-  ) {
-    const title = data.title?.trim()
-    if (!title) {
+  async createTodo(userId: string, data: unknown) {
+    const result = createTodoSchema.safeParse(data)
+    if (!result.success) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Judul wajib diisi.',
+        statusMessage: result.error.errors[0].message,
       })
     }
 
-    const description = data.description?.trim() || null
-    const jsonValue = data.jsonValue ?? null
-    const photoUrl = data.photoUrl ?? null
+    const val = result.data
 
     const created = await TodoRepository.create({
       id: randomUUID(),
       userId,
-      title,
-      description,
-      jsonValue,
-      photoUrl,
-      completed: false,
+      title: val.title,
+      description: val.description ?? null,
+      jsonValue: val.jsonValue ?? null,
+      photoUrl: val.photoUrl ?? null,
+      completed: val.completed ?? false,
     })
 
     if (!created) {
@@ -47,36 +41,16 @@ export const TodoService = {
     return serializeTodo(created)
   },
 
-  async updateTodo(id: string, userId: string, data: Partial<InferInsertModel<typeof todo>>) {
-    const updates: Partial<InferInsertModel<typeof todo>> = {}
-
-    if (data.title !== undefined) {
-      const title = typeof data.title === 'string' ? data.title.trim() : ''
-      if (!title) {
-        throw createError({
-          statusCode: 400,
-          statusMessage: 'Judul wajib diisi.',
-        })
-      }
-      updates.title = title
+  async updateTodo(id: string, userId: string, data: unknown) {
+    const result = updateTodoSchema.safeParse(data)
+    if (!result.success) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: result.error.errors[0].message,
+      })
     }
 
-    if (data.description !== undefined) {
-      const description = typeof data.description === 'string' ? data.description.trim() : ''
-      updates.description = description || null
-    }
-
-    if (Object.prototype.hasOwnProperty.call(data, 'jsonValue')) {
-      updates.jsonValue = data.jsonValue ?? null
-    }
-
-    if (Object.prototype.hasOwnProperty.call(data, 'photoUrl')) {
-      updates.photoUrl = typeof data.photoUrl === 'string' ? data.photoUrl : null
-    }
-
-    if (Object.prototype.hasOwnProperty.call(data, 'completed')) {
-      updates.completed = Boolean(data.completed)
-    }
+    const updates = result.data
 
     if (Object.keys(updates).length === 0) {
       throw createError({
