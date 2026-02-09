@@ -20,4 +20,9 @@ export default defineNuxtConfig({
     betterAuthSecret: process.env.BETTER_AUTH_SECRET,
     betterAuthUrl: process.env.BETTER_AUTH_URL,
   },
+  nitro: {
+    experimental: {
+      openAPI: true,
+    },
+  },
 })

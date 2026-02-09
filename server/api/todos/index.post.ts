@@ -13,3 +13,22 @@ export default defineEventHandler(async (event) => {
     photoUrl: body?.photoUrl,
   })
 })
+
+defineRouteMeta({
+  openAPI: {
+    tags: ['Todos'],
+    summary: 'Create todo',
+    description: 'Membuat todo baru.',
+    responses: {
+      201: {
+        description: 'Todo berhasil dibuat.',
+      },
+      400: {
+        description: 'Bad Request - Validasi gagal.',
+      },
+      401: {
+        description: 'Unauthorized.',
+      },
+    },
+  },
+})

@@ -15,3 +15,27 @@ export default defineEventHandler(async (event) => {
 
   return TodoService.deleteTodo(id, user.id)
 })
+
+defineRouteMeta({
+  openAPI: {
+    tags: ['Todos'],
+    summary: 'Delete todo',
+    description: 'Menghapus data todo.',
+    parameters: [
+      {
+        name: 'id',
+        in: 'path',
+        required: true,
+        schema: { type: 'string' },
+      },
+    ],
+    responses: {
+      200: {
+        description: 'Todo berhasil dihapus.',
+      },
+      404: {
+        description: 'Todo tidak ditemukan.',
+      },
+    },
+  },
+})

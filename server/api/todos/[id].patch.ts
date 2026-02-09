@@ -16,3 +16,27 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   return TodoService.updateTodo(id, user.id, body)
 })
+
+defineRouteMeta({
+  openAPI: {
+    tags: ['Todos'],
+    summary: 'Update todo',
+    description: 'Memperbarui data todo.',
+    parameters: [
+      {
+        name: 'id',
+        in: 'path',
+        required: true,
+        schema: { type: 'string' },
+      },
+    ],
+    responses: {
+      200: {
+        description: 'Todo berhasil diperbarui.',
+      },
+      404: {
+        description: 'Todo tidak ditemukan.',
+      },
+    },
+  },
+})
