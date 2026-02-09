@@ -2,8 +2,8 @@ import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import type { H3Event } from 'h3'
 import { createError, getRequestHeaders } from 'h3'
-import { db } from '../db'
-import * as schema from '../db/schema'
+import { db } from '#server/db'
+import * as schema from '#server/db/schema'
 
 export const auth = betterAuth({
   secret: useRuntimeConfig().betterAuthSecret,

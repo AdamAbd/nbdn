@@ -1,10 +1,10 @@
 import { randomUUID } from 'crypto'
 import { desc, eq } from 'drizzle-orm'
 import { createError, getMethod, readBody } from 'h3'
-import { db } from '~~/server/db'
-import { todo } from '~~/server/db/schema'
-import { requireUser } from '~~/server/utils/auth'
-import { serializeTodo } from '~~/server/utils/todo'
+import { db } from '#server/db'
+import { todo } from '#server/db/schema'
+import { requireUser } from '#server/utils/auth'
+import { serializeTodo } from '#server/utils/todo'
 
 export default defineEventHandler(async (event) => {
   const user = await requireUser(event)

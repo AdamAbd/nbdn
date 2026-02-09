@@ -1,6 +1,6 @@
 import { relations } from 'drizzle-orm'
-import { user, session, account } from './auth'
-import { todo } from './todo'
+import { user, session, account } from '#server/db/schema/auth'
+import { todo } from '#server/db/schema/todo'
 
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),

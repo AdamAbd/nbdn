@@ -1,5 +1,5 @@
 import { pgTable, text, timestamp, boolean, index, jsonb } from 'drizzle-orm/pg-core'
-import { user } from './auth'
+import { user } from '#server/db/schema/auth'
 
 export const todo = pgTable(
   'todo',
