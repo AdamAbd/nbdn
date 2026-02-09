@@ -7,6 +7,7 @@
 
   definePageMeta({
     layout: 'default',
+    middleware: ['auth'],
   })
 
   const todos = ref<TodoItem[]>([])

@@ -6,6 +6,7 @@
   import { authClient } from '@/lib/auth-client'
   definePageMeta({
     layout: 'default',
+    middleware: ['guest'],
   })
 
   const isLoading = ref(false)

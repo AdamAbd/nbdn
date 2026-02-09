@@ -7,6 +7,7 @@
 
   definePageMeta({
     layout: 'default',
+    middleware: ['guest'],
   })
 
   const isLoading = ref(false)
