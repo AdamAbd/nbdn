@@ -1,6 +1,6 @@
 import type { InferInsertModel } from 'drizzle-orm'
 import { and, eq } from 'drizzle-orm'
-import { createError, getMethod, getRouterParam, readBody } from 'h3'
+import { createError, getRouterParam, readBody } from 'h3'
 import { todo } from '#server/db/schema'
 import { requireUser } from '#server/utils/auth'
 import { serializeTodo } from '#server/utils/todo'
@@ -8,7 +8,7 @@ import { db } from '#server/db'
 
 export default defineEventHandler(async (event) => {
   const user = await requireUser(event)
-  const method = getMethod(event)
+  const method = event.method
   const id = getRouterParam(event, 'id')
 
   if (!id) {
