@@ -33,7 +33,7 @@ Sudah terpasang:
 
 ## Struktur File Penting
 
-- `app/lib/auth.ts` → konfigurasi Better Auth
+- `server/utils/auth.ts` → konfigurasi Better Auth & helper ambil session Better Auth dari Nitro
 - `server/api/auth/[...all].ts` → handler API Better Auth
 - `server/db/index.ts` → koneksi Neon + Drizzle
 - `auth-schema.ts` → schema Drizzle Better Auth + tabel custom (todo)
@@ -42,7 +42,6 @@ Sudah terpasang:
 - `nuxt.config.ts` → runtime config untuk env (Nuxt)
 - `server/api/todos/index.ts` → endpoint list + create todo
 - `server/api/todos/[id].ts` → endpoint update + delete todo
-- `server/utils/auth.ts` → helper ambil session Better Auth dari Nitro
 - `server/utils/todo.ts` → serializer todo ke format UI
 - `app/pages/index.vue` → integrasi CRUD todo ke backend
 
@@ -95,19 +94,17 @@ export const db = drizzle({ client: sql, schema })
 
 ## Konfigurasi Better Auth
 
-`app/lib/auth.ts`:
+`server/utils/auth.ts`:
 
 ```ts
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import { db } from '../../server/db'
+import { db } from '../db'
 import * as schema from '../../auth-schema'
 
-const config = useRuntimeConfig()
-
 export const auth = betterAuth({
-  secret: config.betterAuthSecret,
-  baseURL: config.betterAuthUrl,
+  secret: useRuntimeConfig().betterAuthSecret,
+  baseURL: useRuntimeConfig().betterAuthUrl,
   database: drizzleAdapter(db, {
     provider: 'pg',
     schema,
@@ -124,7 +121,7 @@ export const auth = betterAuth({
 
 ```ts
 import { toWebRequest } from 'h3'
-import { auth } from '@/lib/auth'
+import { auth } from '../../utils/auth'
 
 export default defineEventHandler((event) => {
   return auth.handler(toWebRequest(event))
