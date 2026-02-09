@@ -1,4 +1,7 @@
 <script setup lang="ts">
+  import { useForm, Field as VeeField } from 'vee-validate'
+  import { toTypedSchema } from '@vee-validate/zod'
+  import { z } from 'zod'
   import type { TodoItem } from '@/lib/types'
 
   definePageMeta({
@@ -7,31 +10,56 @@
 
   const todos = ref<TodoItem[]>([])
   const editingId = ref<string | null>(null)
-  const titleError = ref('')
-  const jsonError = ref('')
   const apiError = ref('')
   const isLoading = ref(true)
   const isSaving = ref(false)
   const fileInput = ref<HTMLInputElement | null>(null)
 
-  const form = reactive({
-    title: '',
-    description: '',
-    jsonText: '',
-    photoDataUrl: null as string | null,
+  const formSchema = toTypedSchema(
+    z.object({
+      title: z.string().min(1, { message: 'Judul wajib diisi' }),
+      description: z.string().optional(),
+      jsonText: z
+        .string()
+        .optional()
+        .refine(
+          (val) => {
+            if (!val) return true
+            try {
+              JSON.parse(val)
+              return true
+            } catch {
+              return false
+            }
+          },
+          { message: 'JSON tidak valid. Contoh: {"prioritas":"tinggi"}' }
+        ),
+      photoDataUrl: z.string().nullable().optional(),
+    })
+  )
+
+  const {
+    handleSubmit: handleFormSubmit,
+    setValues,
+    resetForm: resetVeeForm,
+    values: formValues,
+    setFieldValue,
+  } = useForm({
+    validationSchema: formSchema,
+    initialValues: {
+      title: '',
+      description: '',
+      jsonText: '',
+      photoDataUrl: null,
+    },
   })
 
   const isEditing = computed(() => editingId.value !== null)
   const totalDone = computed(() => todos.value.filter((todo) => todo.completed).length)
 
   const resetForm = () => {
-    form.title = ''
-    form.description = ''
-    form.jsonText = ''
-    form.photoDataUrl = null
+    resetVeeForm()
     editingId.value = null
-    titleError.value = ''
-    jsonError.value = ''
     if (fileInput.value) {
       fileInput.value.value = ''
     }
@@ -41,47 +69,22 @@
     apiError.value = message
   }
 
-  const validateTitle = () => {
-    if (!form.title.trim()) {
-      titleError.value = 'Judul wajib diisi.'
-      return false
-    }
-    titleError.value = ''
-    return true
-  }
-
-  const parseJson = () => {
-    const raw = form.jsonText.trim()
-    if (!raw) {
-      jsonError.value = ''
-      return null
-    }
-    try {
-      const parsed = JSON.parse(raw)
-      jsonError.value = ''
-      return parsed
-    } catch {
-      jsonError.value = 'JSON tidak valid. Contoh: {"prioritas":"tinggi"}'
-      return null
-    }
-  }
-
   const handleFileChange = (event: Event) => {
     const target = event.target as HTMLInputElement
     const file = target.files?.[0]
     if (!file) {
-      form.photoDataUrl = null
+      setFieldValue('photoDataUrl', null)
       return
     }
     const reader = new FileReader()
     reader.onload = () => {
-      form.photoDataUrl = typeof reader.result === 'string' ? reader.result : null
+      setFieldValue('photoDataUrl', typeof reader.result === 'string' ? reader.result : null)
     }
     reader.readAsDataURL(file)
   }
 
   const clearPhoto = () => {
-    form.photoDataUrl = null
+    setFieldValue('photoDataUrl', null)
     if (fileInput.value) {
       fileInput.value.value = ''
     }
@@ -102,15 +105,11 @@
     }
   }
 
-  const handleSubmit = async () => {
-    const titleOk = validateTitle()
-    const jsonValue = parseJson()
-    if (!titleOk || jsonError.value) {
-      return
-    }
-
+  const onSubmit = handleFormSubmit(async (values) => {
     isSaving.value = true
     setApiError('')
+
+    const jsonValue = values.jsonText ? JSON.parse(values.jsonText) : null
 
     try {
       if (editingId.value) {
@@ -118,10 +117,10 @@
           method: 'PATCH',
           credentials: 'include',
           body: {
-            title: form.title.trim(),
-            description: form.description.trim(),
+            title: values.title.trim(),
+            description: values.description?.trim(),
             jsonValue,
-            photoUrl: form.photoDataUrl,
+            photoUrl: values.photoDataUrl,
           },
         })
         const index = todos.value.findIndex((todo) => todo.id === editingId.value)
@@ -133,10 +132,10 @@
           method: 'POST',
           credentials: 'include',
           body: {
-            title: form.title.trim(),
-            description: form.description.trim(),
+            title: values.title.trim(),
+            description: values.description?.trim(),
             jsonValue,
-            photoUrl: form.photoDataUrl,
+            photoUrl: values.photoDataUrl,
           },
         })
         todos.value.unshift(created)
@@ -148,16 +147,16 @@
     } finally {
       isSaving.value = false
     }
-  }
+  })
 
   const startEdit = (todo: TodoItem) => {
     editingId.value = todo.id
-    form.title = todo.title
-    form.description = todo.description
-    form.jsonText = todo.jsonValue !== null ? JSON.stringify(todo.jsonValue, null, 2) : ''
-    form.photoDataUrl = todo.photoUrl
-    titleError.value = ''
-    jsonError.value = ''
+    setValues({
+      title: todo.title,
+      description: todo.description ?? '',
+      jsonText: todo.jsonValue !== null ? JSON.stringify(todo.jsonValue, null, 2) : '',
+      photoDataUrl: todo.photoUrl,
+    })
     if (fileInput.value) {
       fileInput.value.value = ''
     }
@@ -204,24 +203,6 @@
     }
   }
 
-  watch(
-    () => form.title,
-    () => {
-      if (titleError.value) {
-        validateTitle()
-      }
-    }
-  )
-
-  watch(
-    () => form.jsonText,
-    () => {
-      if (jsonError.value) {
-        parseJson()
-      }
-    }
-  )
-
   onMounted(() => {
     fetchTodos()
   })
@@ -254,40 +235,50 @@
             <UiCardDescription> Isi judul, deskripsi, JSON opsional, dan foto. </UiCardDescription>
           </UiCardHeader>
           <UiCardContent>
-            <form class="space-y-4" @submit.prevent="handleSubmit">
-              <div class="space-y-2">
-                <UiLabel for="todo-title">Judul</UiLabel>
-                <UiInput
-                  id="todo-title"
-                  v-model="form.title"
-                  type="text"
-                  placeholder="Contoh: Belanja mingguan"
-                />
-                <p v-if="titleError" class="text-destructive text-xs">{{ titleError }}</p>
-              </div>
+            <form id="todo-form" class="space-y-4" @submit="onSubmit">
+              <VeeField v-slot="{ field, errors }" name="title">
+                <UiField :data-invalid="!!errors.length">
+                  <UiFieldLabel for="todo-title">Judul</UiFieldLabel>
+                  <UiInput
+                    id="todo-title"
+                    v-model="field.value"
+                    type="text"
+                    placeholder="Contoh: Belanja mingguan"
+                    :aria-invalid="!!errors.length"
+                  />
+                  <UiFieldError v-if="errors.length" :errors="errors" />
+                </UiField>
+              </VeeField>
 
-              <div class="space-y-2">
-                <UiLabel for="todo-description">Deskripsi</UiLabel>
-                <textarea
-                  id="todo-description"
-                  v-model="form.description"
-                  rows="3"
-                  placeholder="Catatan tambahan"
-                  class="border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
-                />
-              </div>
+              <VeeField v-slot="{ field, errors }" name="description">
+                <UiField :data-invalid="!!errors.length">
+                  <UiFieldLabel for="todo-description">Deskripsi</UiFieldLabel>
+                  <textarea
+                    id="todo-description"
+                    v-model="field.value"
+                    rows="3"
+                    placeholder="Catatan tambahan"
+                    class="border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
+                    :aria-invalid="!!errors.length"
+                  />
+                  <UiFieldError v-if="errors.length" :errors="errors" />
+                </UiField>
+              </VeeField>
 
-              <div class="space-y-2">
-                <UiLabel for="todo-json">Nilai JSON (opsional)</UiLabel>
-                <textarea
-                  id="todo-json"
-                  v-model="form.jsonText"
-                  rows="4"
-                  placeholder='{"prioritas":"tinggi","label":["rumah","urgent"]}'
-                  class="border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
-                />
-                <p v-if="jsonError" class="text-destructive text-xs">{{ jsonError }}</p>
-              </div>
+              <VeeField v-slot="{ field, errors }" name="jsonText">
+                <UiField :data-invalid="!!errors.length">
+                  <UiFieldLabel for="todo-json">Nilai JSON (opsional)</UiFieldLabel>
+                  <textarea
+                    id="todo-json"
+                    v-model="field.value"
+                    rows="4"
+                    placeholder='{"prioritas":"tinggi","label":["rumah","urgent"]}'
+                    class="border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
+                    :aria-invalid="!!errors.length"
+                  />
+                  <UiFieldError v-if="errors.length" :errors="errors" />
+                </UiField>
+              </VeeField>
 
               <div class="space-y-2">
                 <UiLabel for="todo-photo">Upload Foto (opsional)</UiLabel>
@@ -298,13 +289,13 @@
                   accept="image/*"
                   class="border-input file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 file:bg-muted w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none file:mr-3 file:rounded-md file:border-0 file:px-3 file:py-1.5 file:text-xs focus-visible:ring-[3px]"
                   @change="handleFileChange"
-                >
-                <div v-if="form.photoDataUrl" class="space-y-2">
+                />
+                <div v-if="formValues.photoDataUrl" class="space-y-2">
                   <img
-                    :src="form.photoDataUrl"
+                    :src="formValues.photoDataUrl"
                     alt="Preview foto todo"
                     class="h-36 w-full rounded-md object-cover"
-                  >
+                  />
                   <UiButton
                     type="button"
                     variant="outline"
@@ -318,7 +309,7 @@
               </div>
 
               <div class="flex flex-col gap-2">
-                <UiButton type="submit" class="w-full" :disabled="isSaving">
+                <UiButton type="submit" form="todo-form" class="w-full" :disabled="isSaving">
                   {{ isSaving ? 'Menyimpan...' : isEditing ? 'Simpan Perubahan' : 'Tambah Todo' }}
                 </UiButton>
                 <UiButton
@@ -340,9 +331,7 @@
           <span> Lihat, update status, edit, atau hapus todo di sini. </span>
         </div>
         <div>
-          <div v-if="isLoading" class="text-muted-foreground text-sm">
-            Memuat todo...
-          </div>
+          <div v-if="isLoading" class="text-muted-foreground text-sm">Memuat todo...</div>
           <div v-else-if="!todos.length" class="text-muted-foreground text-sm">
             Belum ada todo. Tambahkan todo baru di panel kiri.
           </div>
