@@ -1,0 +1,30 @@
+import { relations } from 'drizzle-orm'
+import { user, session, account } from './auth'
+import { todo } from './todo'
+
+export const userRelations = relations(user, ({ many }) => ({
+  sessions: many(session),
+  accounts: many(account),
+  todos: many(todo),
+}))
+
+export const sessionRelations = relations(session, ({ one }) => ({
+  user: one(user, {
+    fields: [session.userId],
+    references: [user.id],
+  }),
+}))
+
+export const accountRelations = relations(account, ({ one }) => ({
+  user: one(user, {
+    fields: [account.userId],
+    references: [user.id],
+  }),
+}))
+
+export const todoRelations = relations(todo, ({ one }) => ({
+  user: one(user, {
+    fields: [todo.userId],
+    references: [user.id],
+  }),
+}))

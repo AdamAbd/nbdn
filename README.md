@@ -292,7 +292,7 @@ Komponen shadcn-vue akan ditambahkan ke folder `app/components/ui/`.
 
 **Schema**
 
-- Drizzle schema hasil generate: `auth-schema.ts`
+- Drizzle schema: `server/db/schema/`
 - Drizzle config: `drizzle.config.ts`
 
 ## Resources

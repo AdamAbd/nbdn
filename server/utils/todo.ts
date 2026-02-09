@@ -1,5 +1,5 @@
 import type { InferSelectModel } from 'drizzle-orm'
-import type { todo } from '../../auth-schema'
+import type { todo } from '../db/schema'
 
 export type TodoRow = InferSelectModel<typeof todo>
 

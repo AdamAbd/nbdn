@@ -36,7 +36,7 @@ Sudah terpasang:
 - `server/utils/auth.ts` → konfigurasi Better Auth & helper ambil session Better Auth dari Nitro
 - `server/api/auth/[...all].ts` → handler API Better Auth
 - `server/db/index.ts` → koneksi Neon + Drizzle
-- `auth-schema.ts` → schema Drizzle Better Auth + tabel custom (todo)
+- `server/db/schema/` → Folder berisi schema Drizzle (auth, todo, dll)
 - `drizzle.config.ts` → config Drizzle Kit
 - `app/lib/auth-client.ts` → client helper Better Auth untuk Nuxt
 - `nuxt.config.ts` → runtime config untuk env (Nuxt)
@@ -55,7 +55,7 @@ import { defineConfig } from 'drizzle-kit'
 
 export default defineConfig({
   out: './drizzle',
-  schema: './auth-schema.ts',
+  schema: './server/db/schema/index.ts',
   dialect: 'postgresql',
   dbCredentials: {
     url: process.env.DATABASE_URL!,
@@ -83,7 +83,7 @@ export default defineNuxtConfig({
 ```ts
 import { neon } from '@neondatabase/serverless'
 import { drizzle } from 'drizzle-orm/neon-http'
-import * as schema from '../../auth-schema'
+import * as schema from './schema'
 
 const config = useRuntimeConfig()
 
@@ -100,7 +100,7 @@ export const db = drizzle({ client: sql, schema })
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { db } from '../db'
-import * as schema from '../../auth-schema'
+import * as schema from '../db/schema'
 
 export const auth = betterAuth({
   secret: useRuntimeConfig().betterAuthSecret,
@@ -144,7 +144,7 @@ export const authClient = createAuthClient()
 bunx @better-auth/cli@latest generate --yes
 ```
 
-Hasilnya akan membuat file `auth-schema.ts` di root project.
+Hasilnya akan membuat schema Better Auth. Kita telah memindahkannya ke `server/db/schema/auth.ts`.
 
 ## Migration Drizzle
 
@@ -164,7 +164,8 @@ bun run db:migrate
 
 ### Schema
 
-- Tabel `todo` disimpan di `auth-schema.ts`.
+- Schema disimpan secara terorganisir di `server/db/schema/`.
+- Tabel `todo` disimpan di `server/db/schema/todo.ts`.
 - Field `user_id` (FK ke `user`) untuk isolasi data per user.
 - Field `json_value` (jsonb) untuk menyimpan JSON opsional.
 - Field `photo_url` (text) untuk menyimpan data URL foto.
