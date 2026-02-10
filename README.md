@@ -307,3 +307,130 @@ Komponen shadcn-vue akan ditambahkan ke folder `app/components/ui/`.
 - [Better Auth Documentation](https://www.better-auth.com/docs)
 - [Drizzle ORM Documentation](https://orm.drizzle.team/docs/get-started)
 - [Neon Documentation](https://neon.tech/docs)
+
+```
+nbdn
+├─ .prettierignore
+├─ .prettierrc
+├─ README.md
+├─ app
+│  ├─ app.vue
+│  ├─ assets
+│  │  └─ css
+│  │     └─ main.css
+│  ├─ components
+│  │  ├─ app
+│  │  │  └─ TodoCard.vue
+│  │  └─ ui
+│  │     ├─ button
+│  │     │  ├─ Button.vue
+│  │     │  └─ index.ts
+│  │     ├─ card
+│  │     │  ├─ Card.vue
+│  │     │  ├─ CardAction.vue
+│  │     │  ├─ CardContent.vue
+│  │     │  ├─ CardDescription.vue
+│  │     │  ├─ CardFooter.vue
+│  │     │  ├─ CardHeader.vue
+│  │     │  ├─ CardTitle.vue
+│  │     │  └─ index.ts
+│  │     ├─ field
+│  │     │  ├─ Field.vue
+│  │     │  ├─ FieldContent.vue
+│  │     │  ├─ FieldDescription.vue
+│  │     │  ├─ FieldError.vue
+│  │     │  ├─ FieldGroup.vue
+│  │     │  ├─ FieldLabel.vue
+│  │     │  ├─ FieldLegend.vue
+│  │     │  ├─ FieldSeparator.vue
+│  │     │  ├─ FieldSet.vue
+│  │     │  ├─ FieldTitle.vue
+│  │     │  └─ index.ts
+│  │     ├─ input
+│  │     │  ├─ Input.vue
+│  │     │  └─ index.ts
+│  │     ├─ label
+│  │     │  ├─ Label.vue
+│  │     │  └─ index.ts
+│  │     └─ separator
+│  │        ├─ Separator.vue
+│  │        └─ index.ts
+│  ├─ layouts
+│  │  ├─ auth.vue
+│  │  └─ default.vue
+│  ├─ lib
+│  │  ├─ auth-client.ts
+│  │  └─ utils.ts
+│  ├─ middleware
+│  │  ├─ auth.ts
+│  │  └─ guest.ts
+│  ├─ pages
+│  │  ├─ index.vue
+│  │  ├─ login.vue
+│  │  └─ register.vue
+│  └─ plugins
+│     └─ ssr-width.ts
+├─ bun.lock
+├─ components.json
+├─ docs
+│  └─ better-auth-setup.md
+├─ drizzle
+│  ├─ 0000_first_gertrude_yorkes.sql
+│  ├─ 0001_wet_shotgun.sql
+│  └─ meta
+│     ├─ 0000_snapshot.json
+│     ├─ 0001_snapshot.json
+│     └─ _journal.json
+├─ drizzle.config.ts
+├─ eslint.config.mjs
+├─ nuxt.config.ts
+├─ package.json
+├─ playwright.config.ts
+├─ public
+│  ├─ favicon.ico
+│  └─ robots.txt
+├─ server
+│  ├─ api
+│  │  ├─ auth
+│  │  │  └─ [...all].ts
+│  │  └─ todos
+│  │     ├─ [id].delete.ts
+│  │     ├─ [id].patch.ts
+│  │     ├─ index.get.ts
+│  │     └─ index.post.ts
+│  ├─ db
+│  │  ├─ index.ts
+│  │  └─ schema
+│  │     ├─ auth.ts
+│  │     ├─ index.ts
+│  │     ├─ relations.ts
+│  │     └─ todo.ts
+│  ├─ middleware
+│  │  ├─ 02.cors.ts
+│  │  └─ 03.ratelimit.ts
+│  ├─ repositories
+│  │  └─ todo.repository.ts
+│  ├─ services
+│  │  └─ todo.service.ts
+│  └─ utils
+│     ├─ auth.ts
+│     └─ todo.ts
+├─ shared
+│  └─ schemas
+│     └─ todo.ts
+├─ test
+│  ├─ nuxt
+│  │  ├─ index.page.test.ts
+│  │  ├─ login.page.test.ts
+│  │  ├─ register.page.test.ts
+│  │  └─ todo-card.component.test.ts
+│  ├─ nuxt-vitest-environment.ts
+│  └─ unit
+│     └─ example.test.ts
+├─ tests
+│  ├─ login.spec.ts
+│  └─ register.spec.ts
+├─ tsconfig.json
+└─ vitest.config.ts
+
+```
