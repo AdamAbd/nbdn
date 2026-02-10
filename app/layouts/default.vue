@@ -4,19 +4,14 @@
   const sessionState = await authClient.useSession(useFetch)
   const session = computed(() => sessionState.data.value)
   const isSessionPending = computed(() => sessionState.isPending)
-  const router = useRouter()
   const isLoggingOut = ref(false)
 
   const handleLogout = async () => {
     isLoggingOut.value = true
     try {
-      await authClient.signOut({
-        fetchOptions: {
-          onSuccess: () => {
-            router.push('/login')
-          },
-        },
-      })
+      await authClient.signOut()
+      authClient.$store.notify('$sessionSignal')
+      await navigateTo('/login')
     } catch (error) {
       console.error('Logout failed:', error)
     } finally {

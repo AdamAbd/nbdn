@@ -12,8 +12,6 @@
 
   const isLoading = ref(false)
   const formError = ref<string | null>(null)
-  const router = useRouter()
-
   const formSchema = toTypedSchema(
     z.object({
       email: z.string().email({ message: 'Email tidak valid' }),
@@ -43,7 +41,8 @@
         return
       }
 
-      await router.push('/')
+      authClient.$store.notify('$sessionSignal')
+      await navigateTo('/')
     } catch (error) {
       formError.value = error instanceof Error ? error.message : 'Gagal masuk. Coba lagi.'
     } finally {

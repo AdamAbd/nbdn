@@ -11,7 +11,6 @@
 
   const isLoading = ref(false)
   const formError = ref<string | null>(null)
-  const router = useRouter()
 
   const formSchema = toTypedSchema(
     z.object({
@@ -45,7 +44,8 @@
         return
       }
 
-      await router.push('/login')
+      authClient.$store.notify('$sessionSignal')
+      await navigateTo('/')
     } catch (error) {
       formError.value = error instanceof Error ? error.message : 'Gagal mendaftar. Coba lagi.'
     } finally {
