@@ -71,7 +71,12 @@
           <span> Lihat, update status, edit, atau hapus todo di sini. </span>
         </div>
         <div>
-          <div v-if="isLoading" class="text-muted-foreground text-sm">Memuat todo...</div>
+          <div v-if="isLoading" class="space-y-3" role="status" aria-live="polite">
+            <span class="sr-only">Memuat todo...</span>
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <AppTodoCardSkeleton v-for="card in 6" :key="card" />
+            </div>
+          </div>
           <div v-else-if="!todos.length" class="text-muted-foreground text-sm">
             Belum ada todo. Tambahkan todo baru di panel kiri.
           </div>
