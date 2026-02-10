@@ -1,10 +1,13 @@
 export default defineEventHandler((event) => {
   const config = useRuntimeConfig()
+  const allowedOrigins = config.corsAllowedOrigins
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean)
 
-  // Basic CORS configuration
-  // In production, you should specify allowed origins
   handleCors(event, {
-    origin: '*', // Adjust this to your needs
+    // `credentials: true` cannot be used with wildcard origin (`*`).
+    origin: allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     credentials: true,
