@@ -4,16 +4,25 @@
   import { z } from 'zod'
 
   import { createTodoSchema, type TodoItem } from '~~/shared/schemas/todo'
+  import { useTodos } from '@/composables/useTodos'
 
   definePageMeta({
     layout: 'default',
     middleware: ['auth'],
   })
 
-  const todos = ref<TodoItem[]>([])
+  const {
+    todos,
+    isLoading,
+    apiError,
+    setApiError,
+    createTodo,
+    updateTodo,
+    removeTodo: deleteTodo,
+    toggleCompleted,
+  } = useTodos()
+
   const editingId = ref<string | null>(null)
-  const apiError = ref('')
-  const isLoading = ref(true)
   const isSaving = ref(false)
   const fileInput = ref<HTMLInputElement | null>(null)
 
@@ -68,10 +77,6 @@
     }
   }
 
-  const setApiError = (message = '') => {
-    apiError.value = message
-  }
-
   const handleFileChange = (event: Event) => {
     const target = event.target as HTMLInputElement
     const file = target.files?.[0]
@@ -93,60 +98,34 @@
     }
   }
 
-  const fetchTodos = async () => {
-    isLoading.value = true
-    setApiError('')
-    try {
-      const data = await $fetch<TodoItem[]>('/api/todos', {
-        credentials: 'include',
-      })
-      todos.value = data
-    } catch {
-      setApiError('Gagal memuat todo. Pastikan sudah login.')
-    } finally {
-      isLoading.value = false
-    }
-  }
-
   const onSubmit = handleFormSubmit(async (values) => {
     isSaving.value = true
     setApiError('')
 
-    const jsonValue = values.jsonText ? JSON.parse(values.jsonText) : null
-
     try {
+      const jsonValue = values.jsonText ? JSON.parse(values.jsonText) : null
+      const payload = {
+        title: values.title.trim(),
+        description: values.description?.trim(),
+        jsonValue,
+        photoUrl: values.photoDataUrl ?? null,
+      }
+
       if (editingId.value) {
-        const updated = await $fetch<TodoItem>(`/api/todos/${editingId.value}`, {
-          method: 'PATCH',
-          credentials: 'include',
-          body: {
-            title: values.title.trim(),
-            description: values.description?.trim(),
-            jsonValue,
-            photoUrl: values.photoDataUrl,
-          },
-        })
-        const index = todos.value.findIndex((todo) => todo.id === editingId.value)
-        if (index !== -1) {
-          todos.value[index] = updated
+        const updated = await updateTodo(editingId.value, payload)
+        if (!updated) {
+          return
         }
       } else {
-        const created = await $fetch<TodoItem>('/api/todos', {
-          method: 'POST',
-          credentials: 'include',
-          body: {
-            title: values.title.trim(),
-            description: values.description?.trim(),
-            jsonValue,
-            photoUrl: values.photoDataUrl,
-          },
-        })
-        todos.value.unshift(created)
+        const created = await createTodo(payload)
+        if (!created) {
+          return
+        }
       }
 
       resetForm()
     } catch {
-      setApiError('Gagal menyimpan todo. Pastikan sudah login.')
+      setApiError('Gagal memproses input todo.')
     } finally {
       isSaving.value = false
     }
@@ -170,45 +149,12 @@
   }
 
   const removeTodo = async (id: string) => {
-    setApiError('')
-    try {
-      await $fetch(`/api/todos/${id}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      })
-      todos.value = todos.value.filter((todo) => todo.id !== id)
-      if (editingId.value === id) {
-        resetForm()
-      }
-    } catch {
-      setApiError('Gagal menghapus todo.')
+    const isRemoved = await deleteTodo(id)
+    if (!isRemoved) return
+    if (editingId.value === id) {
+      resetForm()
     }
   }
-
-  const toggleCompleted = async (id: string) => {
-    const todo = todos.value.find((item) => item.id === id)
-    if (!todo) return
-    setApiError('')
-    try {
-      const updated = await $fetch<TodoItem>(`/api/todos/${id}`, {
-        method: 'PATCH',
-        credentials: 'include',
-        body: {
-          completed: !todo.completed,
-        },
-      })
-      const index = todos.value.findIndex((item) => item.id === id)
-      if (index !== -1) {
-        todos.value[index] = updated
-      }
-    } catch {
-      setApiError('Gagal mengubah status todo.')
-    }
-  }
-
-  onMounted(() => {
-    fetchTodos()
-  })
 </script>
 
 <template>
