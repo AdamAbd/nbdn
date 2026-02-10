@@ -3,9 +3,9 @@
 
   const props = defineProps<{ error: NuxtError }>()
 
-  const statusCode = computed(() => props.error?.status ?? props.error?.status ?? 500)
+  const statusCode = computed(() => props.error?.status ?? 500)
   const normalizedErrorText = computed(() =>
-    `${props.error?.message ?? ''} ${props.error?.message ?? ''}`.toLowerCase()
+    `${props.error?.message ?? ''}`.toLowerCase()
   )
   const isNavigationFailure = computed(() =>
     ['navigation', 'navigasi', 'aborted', 'cancelled'].some((keyword) =>
@@ -36,10 +36,6 @@
 
     if (statusCode.value >= 500) {
       return 'Server sedang bermasalah atau API gagal merespons. Silakan coba lagi beberapa saat.'
-    }
-
-    if (props.error?.message) {
-      return props.error.message
     }
 
     if (props.error?.message) {
