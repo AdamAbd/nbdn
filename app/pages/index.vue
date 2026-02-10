@@ -1,9 +1,5 @@
 <script setup lang="ts">
-  import { useForm, Field as VeeField } from 'vee-validate'
-  import { toTypedSchema } from '@vee-validate/zod'
-  import { z } from 'zod'
-
-  import { createTodoSchema, type TodoItem } from '~~/shared/schemas/todo'
+  import type { TodoItem } from '~~/shared/schemas/todo'
   import { useTodos } from '@/composables/useTodos'
 
   definePageMeta({
@@ -22,137 +18,22 @@
     toggleCompleted,
   } = useTodos()
 
-  const editingId = ref<string | null>(null)
-  const isSaving = ref(false)
-  const fileInput = ref<HTMLInputElement | null>(null)
-
-  const formSchema = toTypedSchema(
-    z.object({
-      title: createTodoSchema.shape.title,
-      description: createTodoSchema.shape.description,
-      jsonText: z
-        .string()
-        .optional()
-        .transform((val) => val || '')
-        .refine(
-          (val) => {
-            if (!val.trim()) return true
-            try {
-              JSON.parse(val)
-              return true
-            } catch {
-              return false
-            }
-          },
-          { message: 'JSON tidak valid. Contoh: {"prioritas":"tinggi"}' }
-        ),
-      photoDataUrl: z.string().nullable().optional(),
-    })
-  )
-
-  const {
-    handleSubmit: handleFormSubmit,
-    setValues,
-    resetForm: resetVeeForm,
-    values: formValues,
-    setFieldValue,
-  } = useForm({
-    validationSchema: formSchema,
-    initialValues: {
-      title: '',
-      description: '',
-      jsonText: '',
-      photoDataUrl: null,
-    },
-  })
-
-  const isEditing = computed(() => editingId.value !== null)
+  const editingTodo = ref<TodoItem | null>(null)
   const totalDone = computed(() => todos.value.filter((todo) => todo.completed).length)
 
-  const resetForm = () => {
-    resetVeeForm()
-    editingId.value = null
-    if (fileInput.value) {
-      fileInput.value.value = ''
-    }
-  }
-
-  const handleFileChange = (event: Event) => {
-    const target = event.target as HTMLInputElement
-    const file = target.files?.[0]
-    if (!file) {
-      setFieldValue('photoDataUrl', null)
-      return
-    }
-    const reader = new FileReader()
-    reader.onload = () => {
-      setFieldValue('photoDataUrl', typeof reader.result === 'string' ? reader.result : null)
-    }
-    reader.readAsDataURL(file)
-  }
-
-  const clearPhoto = () => {
-    setFieldValue('photoDataUrl', null)
-    if (fileInput.value) {
-      fileInput.value.value = ''
-    }
-  }
-
-  const onSubmit = handleFormSubmit(async (values) => {
-    isSaving.value = true
-    setApiError('')
-
-    try {
-      const jsonValue = values.jsonText ? JSON.parse(values.jsonText) : null
-      const payload = {
-        title: values.title.trim(),
-        description: values.description?.trim(),
-        jsonValue,
-        photoUrl: values.photoDataUrl ?? null,
-      }
-
-      if (editingId.value) {
-        const updated = await updateTodo(editingId.value, payload)
-        if (!updated) {
-          return
-        }
-      } else {
-        const created = await createTodo(payload)
-        if (!created) {
-          return
-        }
-      }
-
-      resetForm()
-    } catch {
-      setApiError('Gagal memproses input todo.')
-    } finally {
-      isSaving.value = false
-    }
-  })
-
   const startEdit = (todo: TodoItem) => {
-    editingId.value = todo.id
-    setValues({
-      title: todo.title,
-      description: todo.description ?? '',
-      jsonText: todo.jsonValue !== null ? JSON.stringify(todo.jsonValue, null, 2) : '',
-      photoDataUrl: todo.photoUrl,
-    })
-    if (fileInput.value) {
-      fileInput.value.value = ''
-    }
+    editingTodo.value = todo
   }
 
-  const cancelEdit = () => {
-    resetForm()
+  const stopEdit = () => {
+    editingTodo.value = null
   }
 
   const removeTodo = async (id: string) => {
     const isRemoved = await deleteTodo(id)
     if (!isRemoved) return
-    if (editingId.value === id) {
-      resetForm()
+    if (editingTodo.value?.id === id) {
+      stopEdit()
     }
   }
 </script>
@@ -176,104 +57,14 @@
       </p>
 
       <div class="grid gap-6 lg:grid-cols-[380px,1fr]">
-        <UiCard class="border-0 shadow-md sm:border sm:shadow-sm">
-          <UiCardHeader class="space-y-1">
-            <UiCardTitle class="text-xl font-semibold">
-              {{ isEditing ? 'Edit Todo' : 'Tambah Todo' }}
-            </UiCardTitle>
-            <UiCardDescription> Isi judul, deskripsi, JSON opsional, dan foto. </UiCardDescription>
-          </UiCardHeader>
-          <UiCardContent>
-            <form id="todo-form" class="space-y-4" @submit="onSubmit">
-              <VeeField v-slot="{ componentField, errors }" name="title">
-                <UiField :data-invalid="!!errors.length">
-                  <UiFieldLabel for="todo-title">Judul</UiFieldLabel>
-                  <UiInput
-                    id="todo-title"
-                    v-bind="componentField"
-                    type="text"
-                    placeholder="Contoh: Belanja mingguan"
-                    :aria-invalid="!!errors.length"
-                  />
-                  <UiFieldError v-if="errors.length" :errors="errors" />
-                </UiField>
-              </VeeField>
-
-              <VeeField v-slot="{ field, errors }" name="description">
-                <UiField :data-invalid="!!errors.length">
-                  <UiFieldLabel for="todo-description">Deskripsi</UiFieldLabel>
-                  <textarea
-                    id="todo-description"
-                    v-bind="field"
-                    rows="3"
-                    placeholder="Catatan tambahan"
-                    class="border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
-                    :aria-invalid="!!errors.length"
-                  />
-                  <UiFieldError v-if="errors.length" :errors="errors" />
-                </UiField>
-              </VeeField>
-
-              <VeeField v-slot="{ field, errors }" name="jsonText">
-                <UiField :data-invalid="!!errors.length">
-                  <UiFieldLabel for="todo-json">Nilai JSON (opsional)</UiFieldLabel>
-                  <textarea
-                    id="todo-json"
-                    v-bind="field"
-                    rows="4"
-                    placeholder='{"prioritas":"tinggi","label":["rumah","urgent"]}'
-                    class="border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
-                    :aria-invalid="!!errors.length"
-                  />
-                  <UiFieldError v-if="errors.length" :errors="errors" />
-                </UiField>
-              </VeeField>
-
-              <div class="space-y-2">
-                <UiLabel for="todo-photo">Upload Foto (opsional)</UiLabel>
-                <input
-                  id="todo-photo"
-                  ref="fileInput"
-                  type="file"
-                  accept="image/*"
-                  class="border-input file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 file:bg-muted w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none file:mr-3 file:rounded-md file:border-0 file:px-3 file:py-1.5 file:text-xs focus-visible:ring-[3px]"
-                  @change="handleFileChange"
-                />
-                <div v-if="formValues.photoDataUrl" class="space-y-2">
-                  <img
-                    :src="formValues.photoDataUrl"
-                    alt="Preview foto todo"
-                    class="h-36 w-full rounded-md object-cover"
-                  />
-                  <UiButton
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    class="w-full"
-                    @click="clearPhoto"
-                  >
-                    Hapus Foto
-                  </UiButton>
-                </div>
-              </div>
-
-              <div class="flex flex-col gap-2">
-                <UiButton type="submit" form="todo-form" class="w-full" :disabled="isSaving">
-                  {{ isSaving ? 'Menyimpan...' : isEditing ? 'Simpan Perubahan' : 'Tambah Todo' }}
-                </UiButton>
-                <UiButton
-                  v-if="isEditing"
-                  type="button"
-                  variant="ghost"
-                  class="w-full"
-                  @click="cancelEdit"
-                >
-                  Batal
-                </UiButton>
-              </div>
-            </form>
-          </UiCardContent>
-        </UiCard>
+        <AppTodoForm
+          :editing-todo="editingTodo"
+          :create-todo="createTodo"
+          :update-todo="updateTodo"
+          :set-api-error="setApiError"
+          @saved="stopEdit"
+          @cancel-edit="stopEdit"
+        />
 
         <div class="space-y-1">
           <div class="text-xl font-semibold">Daftar Todo</div>

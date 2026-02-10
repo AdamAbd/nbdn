@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
+import { flushPromises } from '@vue/test-utils'
 import IndexPage from '../../app/pages/index.vue'
 
 const UiButtonStub = {
@@ -23,6 +24,8 @@ describe('index page', () => {
     const wrapper = await mountSuspended(IndexPage, {
       global: { stubs },
     })
+
+    await flushPromises()
 
     expect(wrapper.text()).toContain('Simple CRUD Todo')
     expect(wrapper.text()).toContain('Belum ada todo')
