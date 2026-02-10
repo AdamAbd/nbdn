@@ -1,7 +1,9 @@
 <script setup lang="ts">
   import { authClient } from '@/lib/auth-client'
 
-  const { data: session } = await authClient.useSession(useFetch)
+  const sessionState = authClient.useSession()
+  const session = computed(() => sessionState.value.data)
+  const isSessionPending = computed(() => sessionState.value.isPending)
   const router = useRouter()
   const isLoggingOut = ref(false)
 
@@ -37,7 +39,16 @@
         </div>
 
         <nav class="flex items-center gap-4">
-          <template v-if="session">
+          <template v-if="isSessionPending">
+            <div class="hidden items-center gap-2 sm:flex">
+              <div class="flex flex-col items-end gap-1">
+                <UiSkeleton class="h-4 w-28" />
+                <UiSkeleton class="h-3 w-36" />
+              </div>
+            </div>
+            <UiSkeleton class="h-8 w-20" />
+          </template>
+          <template v-else-if="session">
             <div class="hidden items-center gap-2 sm:flex">
               <div class="flex flex-col items-end">
                 <p class="text-sm leading-none font-medium">{{ session.user.name }}</p>
