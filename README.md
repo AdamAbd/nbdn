@@ -320,7 +320,9 @@ nbdn
 │  │     └─ main.css
 │  ├─ components
 │  │  ├─ app
-│  │  │  └─ TodoCard.vue
+│  │  │  ├─ TodoCard.vue
+│  │  │  ├─ TodoCardSkeleton.vue
+│  │  │  └─ TodoForm.vue
 │  │  └─ ui
 │  │     ├─ button
 │  │     │  ├─ Button.vue
@@ -352,9 +354,18 @@ nbdn
 │  │     ├─ label
 │  │     │  ├─ Label.vue
 │  │     │  └─ index.ts
-│  │     └─ separator
-│  │        ├─ Separator.vue
+│  │     ├─ separator
+│  │     │  ├─ Separator.vue
+│  │     │  └─ index.ts
+│  │     ├─ skeleton
+│  │     │  ├─ Skeleton.vue
+│  │     │  └─ index.ts
+│  │     └─ textarea
+│  │        ├─ Textarea.vue
 │  │        └─ index.ts
+│  ├─ composables
+│  │  └─ useTodos.ts
+│  ├─ error.vue
 │  ├─ layouts
 │  │  ├─ auth.vue
 │  │  └─ default.vue
@@ -365,12 +376,14 @@ nbdn
 │  │  ├─ auth.ts
 │  │  └─ guest.ts
 │  ├─ pages
+│  │  ├─ [...slug].vue
 │  │  ├─ index.vue
 │  │  ├─ login.vue
 │  │  └─ register.vue
 │  └─ plugins
 │     └─ ssr-width.ts
 ├─ bun.lock
+├─ claude_suggestion.md
 ├─ components.json
 ├─ docs
 │  └─ better-auth-setup.md
@@ -393,11 +406,13 @@ nbdn
 │  ├─ api
 │  │  ├─ auth
 │  │  │  └─ [...all].ts
-│  │  └─ todos
-│  │     ├─ [id].delete.ts
-│  │     ├─ [id].patch.ts
-│  │     ├─ index.get.ts
-│  │     └─ index.post.ts
+│  │  ├─ todos
+│  │  │  ├─ [id].delete.ts
+│  │  │  ├─ [id].patch.ts
+│  │  │  ├─ index.get.ts
+│  │  │  └─ index.post.ts
+│  │  └─ uploads
+│  │     └─ todo-photo.post.ts
 │  ├─ db
 │  │  ├─ index.ts
 │  │  └─ schema
@@ -414,14 +429,17 @@ nbdn
 │  │  └─ todo.service.ts
 │  └─ utils
 │     ├─ auth.ts
+│     ├─ r2.ts
 │     └─ todo.ts
 ├─ shared
 │  └─ schemas
 │     └─ todo.ts
 ├─ test
 │  ├─ nuxt
+│  │  ├─ error.page.test.ts
 │  │  ├─ index.page.test.ts
 │  │  ├─ login.page.test.ts
+│  │  ├─ not-found.page.test.ts
 │  │  ├─ register.page.test.ts
 │  │  └─ todo-card.component.test.ts
 │  ├─ nuxt-vitest-environment.ts
