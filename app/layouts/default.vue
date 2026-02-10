@@ -1,9 +1,9 @@
 <script setup lang="ts">
   import { authClient } from '@/lib/auth-client'
 
-  const sessionState = authClient.useSession()
-  const session = computed(() => sessionState.value.data)
-  const isSessionPending = computed(() => sessionState.value.isPending)
+  const sessionState = await authClient.useSession(useFetch)
+  const session = computed(() => sessionState.data.value)
+  const isSessionPending = computed(() => sessionState.isPending)
   const router = useRouter()
   const isLoggingOut = ref(false)
 
