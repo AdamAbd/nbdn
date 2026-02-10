@@ -168,7 +168,7 @@ bun run db:migrate
 - Tabel `todo` disimpan di `server/db/schema/todo.ts`.
 - Field `user_id` (FK ke `user`) untuk isolasi data per user.
 - Field `json_value` (jsonb) untuk menyimpan JSON opsional.
-- Field `photo_url` (text) untuk menyimpan data URL foto.
+- Field `photo_url` (text) untuk menyimpan URL foto hasil upload object storage (R2), bukan data URL base64.
 
 ### Migration
 
@@ -180,6 +180,7 @@ bun run db:migrate
 - `POST /api/todos` → create todo baru.
 - `PATCH /api/todos/:id` → update todo (judul, deskripsi, json, foto, status).
 - `DELETE /api/todos/:id` → hapus todo.
+- `POST /api/uploads/todo-photo` → upload file foto ke Cloudflare R2 via backend (multipart/form-data).
 
 Semua endpoint di atas membutuhkan session Better Auth (cookie). Jika belum login, akan 401.
 

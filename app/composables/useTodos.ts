@@ -7,6 +7,8 @@ type SaveTodoPayload = {
   photoUrl: string | null
 }
 
+type UpdateTodoPayload = Partial<SaveTodoPayload>
+
 export const useTodos = () => {
   const apiError = ref('')
 
@@ -56,7 +58,7 @@ export const useTodos = () => {
     }
   }
 
-  const updateTodo = async (id: string, payload: SaveTodoPayload) => {
+  const updateTodo = async (id: string, payload: UpdateTodoPayload) => {
     setApiError('')
     try {
       const updated = await $fetch<TodoItem>(`/api/todos/${id}`, {

@@ -4,7 +4,16 @@ export const todoSchema = z.object({
   title: z.string().trim().min(1, 'Judul wajib diisi.').max(255, 'Judul terlalu panjang.'),
   description: z.string().trim().optional().nullable(),
   jsonValue: z.any().optional().nullable(),
-  photoUrl: z.string().optional().nullable(),
+  photoUrl: z
+    .string()
+    .trim()
+    .url('URL foto tidak valid.')
+    .max(2048, 'URL foto terlalu panjang.')
+    .refine((value) => !value.toLowerCase().startsWith('data:'), {
+      message: 'Foto harus berupa URL file, bukan data URL.',
+    })
+    .optional()
+    .nullable(),
   completed: z.boolean().optional().default(false),
 })
 

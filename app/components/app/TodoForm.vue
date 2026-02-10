@@ -15,17 +15,19 @@
   const props = defineProps<{
     editingTodo: TodoItem | null
     createTodo: (payload: SaveTodoPayload) => Promise<TodoItem | null>
-    updateTodo: (id: string, payload: SaveTodoPayload) => Promise<TodoItem | null>
+    updateTodo: (id: string, payload: Partial<SaveTodoPayload>) => Promise<TodoItem | null>
     setApiError: (message?: string) => void
   }>()
 
   const emit = defineEmits<{
-    (e: 'saved'): void
-    (e: 'cancel-edit'): void
+    (e: 'saved' | 'cancel-edit'): void
   }>()
 
   const isSaving = ref(false)
   const fileInput = ref<HTMLInputElement | null>(null)
+  const selectedPhotoFile = ref<File | null>(null)
+  const previewObjectUrl = ref<string | null>(null)
+  const photoFieldTouched = ref(false)
 
   const formSchema = toTypedSchema(
     z.object({
@@ -47,7 +49,7 @@
           },
           { message: 'JSON tidak valid. Contoh: {"prioritas":"tinggi"}' }
         ),
-      photoDataUrl: z.string().nullable().optional(),
+      photoUrl: z.string().nullable().optional(),
     })
   )
 
@@ -63,14 +65,46 @@
       title: '',
       description: '',
       jsonText: '',
-      photoDataUrl: null,
+      photoUrl: null,
     },
   })
 
   const isEditing = computed(() => Boolean(props.editingTodo))
+  const previewPhotoUrl = computed(() => previewObjectUrl.value ?? formValues.photoUrl ?? null)
+
+  const revokePreviewObjectUrl = () => {
+    if (previewObjectUrl.value) {
+      URL.revokeObjectURL(previewObjectUrl.value)
+      previewObjectUrl.value = null
+    }
+  }
+
+  const setSelectedPhotoFile = (file: File | null) => {
+    selectedPhotoFile.value = file
+    revokePreviewObjectUrl()
+
+    if (file) {
+      previewObjectUrl.value = URL.createObjectURL(file)
+    }
+  }
+
+  const uploadPhotoToServer = async (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const uploaded = await $fetch<{ photoUrl: string }>('/api/uploads/todo-photo', {
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+    })
+
+    return uploaded.photoUrl
+  }
 
   const resetForm = () => {
     resetVeeForm()
+    setSelectedPhotoFile(null)
+    photoFieldTouched.value = false
     if (fileInput.value) {
       fileInput.value.value = ''
     }
@@ -79,20 +113,20 @@
   const handleFileChange = (event: Event) => {
     const target = event.target as HTMLInputElement
     const file = target.files?.[0]
+
     if (!file) {
-      setFieldValue('photoDataUrl', null)
+      setSelectedPhotoFile(null)
       return
     }
 
-    const reader = new FileReader()
-    reader.onload = () => {
-      setFieldValue('photoDataUrl', typeof reader.result === 'string' ? reader.result : null)
-    }
-    reader.readAsDataURL(file)
+    photoFieldTouched.value = true
+    setSelectedPhotoFile(file)
   }
 
   const clearPhoto = () => {
-    setFieldValue('photoDataUrl', null)
+    setSelectedPhotoFile(null)
+    photoFieldTouched.value = true
+    setFieldValue('photoUrl', null)
     if (fileInput.value) {
       fileInput.value.value = ''
     }
@@ -104,16 +138,32 @@
 
     try {
       const jsonValue = values.jsonText ? JSON.parse(values.jsonText) : null
-      const payload = {
+      const basePayload = {
         title: values.title.trim(),
         description: values.description?.trim(),
         jsonValue,
-        photoUrl: values.photoDataUrl ?? null,
       }
 
       const saved = props.editingTodo
-        ? await props.updateTodo(props.editingTodo.id, payload)
-        : await props.createTodo(payload)
+        ? await (async () => {
+            const payload: Partial<SaveTodoPayload> = {
+              ...basePayload,
+            }
+
+            if (selectedPhotoFile.value) {
+              payload.photoUrl = await uploadPhotoToServer(selectedPhotoFile.value)
+            } else if (photoFieldTouched.value) {
+              payload.photoUrl = values.photoUrl ?? null
+            }
+
+            return props.updateTodo(props.editingTodo.id, payload)
+          })()
+        : await props.createTodo({
+            ...basePayload,
+            photoUrl: selectedPhotoFile.value
+              ? await uploadPhotoToServer(selectedPhotoFile.value)
+              : values.photoUrl ?? null,
+          })
 
       if (!saved) return
 
@@ -134,6 +184,9 @@
   watch(
     () => props.editingTodo,
     (todo) => {
+      setSelectedPhotoFile(null)
+      photoFieldTouched.value = false
+
       if (!todo) {
         resetForm()
         return
@@ -143,7 +196,7 @@
         title: todo.title,
         description: todo.description ?? '',
         jsonText: todo.jsonValue !== null ? JSON.stringify(todo.jsonValue, null, 2) : '',
-        photoDataUrl: todo.photoUrl,
+        photoUrl: todo.photoUrl,
       })
 
       if (fileInput.value) {
@@ -152,6 +205,10 @@
     },
     { immediate: true }
   )
+
+  onBeforeUnmount(() => {
+    revokePreviewObjectUrl()
+  })
 </script>
 
 <template>
@@ -215,13 +272,13 @@
             accept="image/*"
             class="border-input file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 file:bg-muted w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none file:mr-3 file:rounded-md file:border-0 file:px-3 file:py-1.5 file:text-xs focus-visible:ring-[3px]"
             @change="handleFileChange"
-          />
-          <div v-if="formValues.photoDataUrl" class="space-y-2">
+          >
+          <div v-if="previewPhotoUrl" class="space-y-2">
             <img
-              :src="formValues.photoDataUrl"
+              :src="previewPhotoUrl"
               alt="Preview foto todo"
               class="h-36 w-full rounded-md object-cover"
-            />
+            >
             <UiButton
               type="button"
               variant="outline"
