@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import type { TodoItem } from '../../app/lib/types'
 import TodoCard from '../../app/components/app/TodoCard.vue'
+import type { TodoItem } from '~~/shared/schemas/todo'
 
 const UiButtonStub = {
   template: '<button v-bind="$attrs" @click="$emit(\'click\')"><slot /></button>',
