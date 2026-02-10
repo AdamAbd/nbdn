@@ -2,8 +2,20 @@ import { neon } from '@neondatabase/serverless'
 import { drizzle } from 'drizzle-orm/neon-http'
 import * as schema from '#server/db/schema'
 
-const config = useRuntimeConfig()
+const createDb = () => {
+  const config = useRuntimeConfig()
+  const sql = neon(config.databaseUrl)
+  return drizzle({ client: sql, schema })
+}
 
-const sql = neon(config.databaseUrl)
+type DbClient = ReturnType<typeof createDb>
+let dbInstance: DbClient | null = null
 
-export const db = drizzle({ client: sql, schema })
+export const getDb = (): DbClient => {
+  if (dbInstance) {
+    return dbInstance
+  }
+
+  dbInstance = createDb()
+  return dbInstance
+}
